@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Bittu — Tera AI Dost</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --bg-deep:#14151f;
+    --bg-panel:#1c1e2b;
+    --bg-bubble-mine:#2a2d3f;
+    --marigold:#f4a53a;
+    --teal:#4fd1c5;
+    --text-primary:#f5f0e6;
+    --text-muted:#9497ab;
+    --app-height:100vh;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%; margin:0;}
+  body{
+    background:radial-gradient(circle at 50% -10%, #23263a 0%, var(--bg-deep) 60%);
+    font-family:'Inter',sans-serif;
+    color:var(--text-primary);
+    display:flex;
+    justify-content:center;
+  }
+  .phone{
+    width:100%;
+    max-width:420px;
+    height:var(--app-height);
+    display:flex;
+    flex-direction:column;
+    background:var(--bg-deep);
+    position:relative;
+    overflow:hidden;
+  }
+
+  /* ---- Character stage ---- */
+  .stage{
+    position:relative;
+    height:210px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(180deg, #23263a 0%, var(--bg-deep) 100%);
+    border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  .stage-glow{
+    position:absolute;
+    width:180px;height:180px;
+    border-radius:50%;
+    background:var(--mode-color, var(--teal));
+    filter:blur(50px);
+    opacity:0.25;
+    transition:background 0.5s ease;
+  }
+  .bittu{
+    position:relative;
+    width:96px;height:96px;
+    animation:bob 2.6s ease-in-out infinite;
+  }
+  .bittu.speaking{animation:bob 0.5s ease-in-out infinite;}
+  @keyframes bob{
+    0%,100%{transform:translateY(0) rotate(-2deg);}
+    50%{transform:translateY(-10px) rotate(2deg);}
+  }
+  .bittu-body{
+    width:96px;height:96px;
+    border-radius:50% 50% 46% 46%;
+    background:var(--mode-color, var(--teal));
+    position:relative;
+    box-shadow: inset -8px -10px 0 rgba(0,0,0,0.12);
+    transition:background 0.5s ease;
+  }
+  .eye{
+    position:absolute;
+    width:10px;height:14px;
+    background:#14151f;
+    border-radius:50%;
+    top:34px;
+    animation:blink 4.2s infinite;
+  }
+  .eye.left{left:26px;}
+  .eye.right{right:26px;}
+  @keyframes blink{
+    0%,92%,100%{transform:scaleY(1);}
+    95%{transform:scaleY(0.1);}
+  }
+  .mouth{
+    position:absolute;
+    width:18px;height:6px;
+    background:#14151f;
+    border-radius:0 0 10px 10px;
+    left:39px;top:56px;
+    transform-origin:top;
+    transition:height 0.12s ease, border-radius 0.12s ease;
+  }
+  .bittu.speaking .mouth{
+    animation:talk 0.32s ease-in-out infinite;
+  }
+  @keyframes talk{
+    0%,100%{height:6px; border-radius:0 0 10px 10px;}
+    50%{height:12px; border-radius:8px;}
+  }
+  .cheek{
+    position:absolute;
+    width:12px;height:8px;
+    background:var(--marigold);
+    border-radius:50%;
+    opacity:0.55;
+    top:50px;
+  }
+  .cheek.left{left:12px;}
+  .cheek.right{right:12px;}
+  .antenna{
+    position:absolute;
+    width:4px;height:18px;
+    background:var(--mode-color, var(--teal));
+    left:46px;top:-14px;
+    border-radius:4px;
+    transition:background 0.5s ease;
+  }
+  .antenna::after{
+    content:'';
+    position:absolute;
+    top:-6px;left:-3px;
+    width:10px;height:10px;
+    border-radius:50%;
+    background:var(--marigold);
+  }
+  .name-tag{
+    position:absolute;
+    bottom:12px;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    color:var(--text-muted);
+    letter-spacing:0.3px;
+    text-align:center;
+  }
+  .name-tag span{color:var(--text-primary);}
+  .listening-ring{
+    position:absolute;
+    width:120px;height:120px;
+    border-radius:50%;
+    border:2px solid var(--mode-color, var(--teal));
+    opacity:0;
+  }
+  .listening-ring.on{
+    animation:pulse 1.4s ease-out infinite;
+  }
+  @keyframes pulse{
+    0%{transform:scale(0.8); opacity:0.7;}
+    100%{transform:scale(1.5); opacity:0;}
+  }
+
+  /* ---- Mode selector ---- */
+  .modes{
+    display:flex;
+    gap:8px;
+    padding:10px 16px;
+    overflow-x:auto;
+    flex-shrink:0;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  .modes::-webkit-scrollbar{display:none;}
+  .mode-chip{
+    flex-shrink:0;
+    padding:7px 14px;
+    border-radius:20px;
+    background:var(--bg-panel);
+    color:var(--text-muted);
+    font-size:13px;
+    font-weight:600;
+    border:1px solid rgba(255,255,255,0.08);
+    cursor:pointer;
+    transition:all 0.2s ease;
+    font-family:'Inter',sans-serif;
+    white-space:nowrap;
+  }
+  .mode-chip.active{
+    background:var(--mode-color, var(--teal));
+    color:#0e0f16;
+    border-color:transparent;
+  }
+
+  /* ---- Chat ---- */
+  .chat{
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    padding:14px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .bubble{
+    max-width:78%;
+    padding:10px 14px;
+    border-radius:16px;
+    font-size:14.5px;
+    line-height:1.45;
+    overflow-wrap:break-word;
+    word-break:break-word;
+    white-space:pre-wrap;
+  }
+  .bubble.bittu{
+    background:var(--bg-panel);
+    align-self:flex-start;
+    border-bottom-left-radius:4px;
+  }
+  .bubble.me{
+    background:var(--bg-bubble-mine);
+    align-self:flex-end;
+    border-bottom-right-radius:4px;
+  }
+  .bubble.typing{
+    color:var(--text-muted);
+    font-style:italic;
+  }
+  .system-note{
+    align-self:center;
+    font-size:11px;
+    color:var(--text-muted);
+    text-align:center;
+    padding:4px 14px;
+    max-width:90%;
+  }
+
+  /* ---- Input ---- */
+  .input-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 16px calc(14px + env(safe-area-inset-bottom));
+    border-top:1px solid rgba(255,255,255,0.06);
+    flex-shrink:0;
+    background:var(--bg-deep);
+  }
+  .input-row input{
+    flex:1;
+    min-width:0;
+    background:var(--bg-panel);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:22px;
+    padding:11px 16px;
+    color:var(--text-primary);
+    font-size:14.5px;
+    font-family:'Inter',sans-serif;
+    outline:none;
+  }
+  .input-row input::placeholder{color:var(--text-muted);}
+  .icon-btn{
+    width:42px;height:42px;
+    border-radius:50%;
+    border:none;
+    color:#0e0f16;
+    font-size:16px;
+    cursor:pointer;
+    flex-shrink:0;
+    transition:background 0.5s ease, transform 0.15s ease;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .icon-btn:active{transform:scale(0.92);}
+  .icon-btn:disabled{opacity:0.5;}
+  .send-btn{background:var(--mode-color, var(--teal));}
+  .mic-btn{background:var(--bg-panel); color:var(--text-primary); border:1px solid rgba(255,255,255,0.1);}
+  .mic-btn.active{background:var(--danger-soft, #e8836b); color:#fff;}
+  .voice-toggle-row{
+    display:flex;
+    justify-content:center;
+    padding:4px 16px 0;
+    flex-shrink:0;
+  }
+  .voice-toggle{
+    font-size:12px;
+    color:var(--text-muted);
+    display:flex;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .voice-toggle input{accent-color:var(--mode-color, var(--teal));}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="stage">
+    <div class="stage-glow" id="glow"></div>
+    <div class="listening-ring" id="listeningRing"></div>
+    <div class="bittu" id="bittuChar">
+      <div class="antenna" id="antenna"></div>
+      <div class="bittu-body" id="bittuBody">
+        <div class="eye left"></div>
+        <div class="eye right"></div>
+        <div class="cheek left"></div>
+        <div class="cheek right"></div>
+        <div class="mouth"></div>
+      </div>
+    </div>
+    <div class="name-tag"><span>Bittu</span> · tera dost hai yaar</div>
+  </div>
+
+  <div class="modes" id="modes"></div>
+
+  <div class="voice-toggle-row">
+    <label class="voice-toggle">
+      <input type="checkbox" id="voiceMode" />
+      Hands-free voice mode (Bittu bolega, tum bolo)
+    </label>
+  </div>
+
+  <div class="chat" id="chat">
+    <div class="bubble bittu">Are bhai! Kya haal hai? Bata kya chal raha hai zindagi mein 👀</div>
+    <div class="system-note">Bittu ek dost jaisa AI hai — real emergency ya serious problem ho toh kisi trusted insaan ya helpline se zaroor baat karna. Voice ke liye mic button use karo ya hands-free mode on karo.</div>
+  </div>
+
+  <div class="input-row">
+    <button class="icon-btn mic-btn" id="micBtn" title="Bol ke bhejo">🎤</button>
+    <input type="text" id="userInput" placeholder="Bittu se baat kar..." />
+    <button class="icon-btn send-btn" id="sendBtn">➤</button>
+  </div>
+</div>
+
+<script>
+/* ---------- fix mobile viewport height so chat/input never overlap ---------- */
+function setAppHeight(){
+  document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
+}
+setAppHeight();
+window.addEventListener('resize', setAppHeight);
+window.addEventListener('orientationchange', setAppHeight);
+
+const MODES = [
+  { id:'chill', label:'Chill Dost', color:'#4fd1c5',
+    prompt:`Tum casual "chill dost" mode mein ho. Halka-phulka, mazedaar, dosti wali baat karo — jaise koi dost canteen mein baithke gap maar raha ho.` },
+  { id:'fighter', label:'Fighter', color:'#e8836b',
+    prompt:`Tum "fighter mode" mein ho. Koi conflict, jhagda, ya tension wali situation hai. Pehle safety aur de-escalation ka advice do — kabhi bhi fight badhane wali baat mat karo. Practical, sahi, safe solution do, thoda protective bade bhai/behen jaisa tone.` },
+  { id:'focus', label:'Padhaku', color:'#8fd694',
+    prompt:`Tum "padhaku/focus mode" mein ho. Study, exam, ya deadline se related baat ho rahi hai. Practical study tips, motivation, realistic advice do — bina lecture diye, dost jaisa encourage karo.` },
+  { id:'comedian', label:'Comedian', color:'#f4a53a',
+    prompt:`Tum "comedian mode" mein ho. Halka mazaak, wit, aur mast tone use karo taaki mood light ho jaaye — lekin agar baat serious ho jaaye toh turant sahi tone mein aa jao.` },
+  { id:'artist', label:'Artist', color:'#b98af4',
+    prompt:`Tum "artist mode" mein ho. Thoda creative, thoda shayarana, sochne-samajhne wala tone rakho — jaise koi dost jo cheezon ko different angle se dekhta hai.` }
+];
+
+const BASE_SYSTEM = `Tum "Bittu" ho — ek AI dost jo Indian college/school students ke liye bana hai. Hinglish mein, casual, dost jaisi language mein baat karo — chhoti, natural, real conversation jaisi (2-4 lines max, lecture mat do, kyunki yeh voice mein bhi bola jaata hai).
+
+Kabhi bhi romantic ya emotional-dependency badhane wali baat mat karo. Agar koi "I love you" ya romantic tarike se baat kare, halke tarike se clarify karo ki tum AI ho, dost ki tarah support de sakte ho par romance nahi — bina awkward banaye, dost jaise tareeke se.
+
+Agar koi genuinely distress mein lage (self-harm, severe depression, real danger ke signs), turant seriously respond karo aur unhe kisi trusted insaan, family, ya helpline se baat karne ke liye encourage karo — chill tone chhod ke.
+
+Hamesha safe aur practical advice do — kabhi bhi kisi risky, harmful, ya dangerous cheez ko encourage mat karo. Sirf plain text mein bolo, koi markdown symbols (*, #, -) use mat karo kyunki yeh voice mein bola jaayega.`;
+
+let currentMode = MODES[0];
+let history = [];
+let voiceModeOn = false;
+let recognizing = false;
+let isSending = false;
+const MAX_HISTORY_TURNS = 16; // keep last 16 messages (8 exchanges) so replies never slow down or get stuck
+
+const modesEl = document.getElementById('modes');
+const chatEl = document.getElementById('chat');
+const inputEl = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+const micBtn = document.getElementById('micBtn');
+const bittuChar = document.getElementById('bittuChar');
+const listeningRing = document.getElementById('listeningRing');
+const voiceModeCheckbox = document.getElementById('voiceMode');
+
+function applyModeColor(color){
+  document.documentElement.style.setProperty('--mode-color', color);
+}
+
+function renderModes(){
+  modesEl.innerHTML = '';
+  MODES.forEach(m => {
+    const chip = document.createElement('div');
+    chip.className = 'mode-chip' + (m.id === currentMode.id ? ' active' : '');
+    chip.textContent = m.label;
+    chip.style.setProperty('--mode-color', m.color);
+    chip.onclick = () => {
+      currentMode = m;
+      applyModeColor(m.color);
+      renderModes();
+      addBubble('— Bittu ab "' + m.label + '" mode mein hai —', 'system');
+    };
+    modesEl.appendChild(chip);
+  });
+}
+
+function addBubble(text, who){
+  const b = document.createElement('div');
+  if(who === 'system'){
+    b.className = 'system-note';
+  } else {
+    b.className = 'bubble ' + who;
+  }
+  b.textContent = text;
+  chatEl.appendChild(b);
+  chatEl.scrollTop = chatEl.scrollHeight;
+  return b;
+}
+
+/* ---------- text to speech ---------- */
+function speak(text){
+  return new Promise((resolve) => {
+    if(!('speechSynthesis' in window)){ resolve(); return; }
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    const voices = window.speechSynthesis.getVoices();
+    const hiVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('hi'));
+    const inVoice = voices.find(v => v.lang && v.lang.toLowerCase().includes('en-in'));
+    utter.voice = hiVoice || inVoice || voices[0] || null;
+    utter.rate = 1.02;
+    utter.onstart = () => bittuChar.classList.add('speaking');
+    utter.onend = () => { bittuChar.classList.remove('speaking'); resolve(); };
+    utter.onerror = () => { bittuChar.classList.remove('speaking'); resolve(); };
+    window.speechSynthesis.speak(utter);
+  });
+}
+
+/* ---------- speech to text ---------- */
+let recognition = null;
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+if(SpeechRec){
+  recognition = new SpeechRec();
+  recognition.lang = 'hi-IN';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    recognizing = true;
+    micBtn.classList.add('active');
+    listeningRing.classList.add('on');
+  };
+  recognition.onend = () => {
+    recognizing = false;
+    micBtn.classList.remove('active');
+    listeningRing.classList.remove('on');
+  };
+  recognition.onresult = (event) => {
+    const said = event.results[0][0].transcript;
+    inputEl.value = said;
+    sendMessage();
+  };
+  recognition.onerror = () => {
+    recognizing = false;
+    micBtn.classList.remove('active');
+    listeningRing.classList.remove('on');
+  };
+} else {
+  micBtn.disabled = true;
+  micBtn.title = 'Is browser mein voice input support nahi hai';
+}
+
+function startListening(){
+  if(!recognition) return;
+  if(recognizing){
+    try{ recognition.stop(); } catch(e){}
+    return;
+  }
+  try{
+    recognition.start();
+  } catch(e){
+    // "already started" race condition — reset and retry once
+    try{ recognition.stop(); } catch(e2){}
+    setTimeout(() => { try{ recognition.start(); } catch(e3){} }, 250);
+  }
+}
+
+recognition && (recognition.onerror = function(event){
+  recognizing = false;
+  micBtn.classList.remove('active');
+  listeningRing.classList.remove('on');
+  if(event.error === 'not-allowed' || event.error === 'service-not-allowed'){
+    addBubble('Mic ka permission block hai — browser settings mein mic allow karo is site ke liye.', 'system');
+  } else if(event.error === 'no-speech'){
+    // silent — user just didn't say anything, no need to alarm them
+  } else {
+    addBubble('Mic mein thodi dikkat aayi (' + event.error + '), phir se try karo.', 'system');
+  }
+});
+
+micBtn.onclick = startListening;
+voiceModeCheckbox.onchange = (e) => {
+  voiceModeOn = e.target.checked;
+  if(voiceModeOn){
+    addBubble('— Hands-free mode ON: Bittu bolega, jawab dene ke liye bas bolna shuru karo —', 'system');
+  }
+};
+
+async function sendMessage(){
+  if(isSending) return; // stop double-send that was causing the stuck/stacked messages
+  const text = inputEl.value.trim();
+  if(!text) return;
+  isSending = true;
+  inputEl.value = '';
+  sendBtn.disabled = true;
+  inputEl.disabled = true;
+
+  addBubble(text, 'me');
+  history.push({role:'user', content:text});
+  if(history.length > MAX_HISTORY_TURNS){
+    history = history.slice(history.length - MAX_HISTORY_TURNS); // keep recent context only, so it never slows down or hangs
+  }
+
+  const typing = addBubble('Bittu type kar raha hai...', 'bittu typing');
+
+  try{
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: BASE_SYSTEM + "\n\n" + currentMode.prompt,
+        messages: history
+      })
+    });
+    const data = await response.json();
+    if(!response.ok){ throw new Error(data.error || 'API error'); }
+    const reply = data.reply || "Are yaar, kuch gadbad ho gayi, phir se try kar.";
+    typing.remove();
+    addBubble(reply, 'bittu');
+    history.push({role:'assistant', content:reply});
+
+    if(voiceModeOn){
+      await speak(reply);
+      startListening();
+    }
+  } catch(err){
+    typing.remove();
+    addBubble("Network mein thodi gadbad hai yaar, ek baar phir try kar.", 'bittu');
+    console.error(err);
+  } finally {
+    sendBtn.disabled = false;
+    inputEl.disabled = false;
+    isSending = false;
+    inputEl.focus();
+  }
+}
+
+sendBtn.onclick = sendMessage;
+inputEl.addEventListener('keydown', e => {
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+applyModeColor(currentMode.color);
+renderModes();
+</script>
+</body>
+</html>
